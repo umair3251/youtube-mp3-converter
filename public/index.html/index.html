@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube to MP3 Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background: #0a0a0a; color: white; font-family: 'Inter', sans-serif; }
+        .gradient-text { background: linear-gradient(to right, #ff3333, #ff6666); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .glass { background: rgba(17, 17, 17, 0.9); backdrop-filter: blur(10px); }
+        .loader { border: 3px solid rgba(255,255,255,0.1); border-left-color: #ff3333; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    
+    <!-- Header -->
+    <nav class="glass border-b border-white/10 fixed w-full z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-center">
+            <i class="fa-brands fa-youtube text-red-500 text-2xl mr-2"></i>
+            <span class="text-2xl font-bold">Tube<span class="text-red-500">To</span>MP3</span>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow pt-24 pb-12 px-4 max-w-3xl mx-auto w-full">
+        
+        <!-- Title -->
+        <div class="text-center mb-8 mt-8">
+            <h1 class="text-4xl md:text-6xl font-bold mb-4">
+                Free <span class="gradient-text">YouTube to MP3</span>
+            </h1>
+            <p class="text-gray-400 text-lg">Convert any YouTube video to high-quality MP3</p>
+        </div>
+
+        <!-- Converter Box -->
+        <div class="bg-[#111] border border-white/10 rounded-2xl p-6 shadow-2xl">
+            
+            <!-- Input Stage -->
+            <div id="input-stage">
+                <div class="relative mb-4">
+                    <input type="text" id="video-url" placeholder="Paste YouTube URL here..." 
+                        class="w-full pl-4 pr-4 py-4 bg-[#1a1a1a] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-red-500 text-lg">
+                </div>
+
+                <div class="flex justify-center gap-3 mb-6">
+                    <label class="cursor-pointer">
+                        <input type="radio" name="quality" value="128" class="peer sr-only">
+                        <div class="px-4 py-2 rounded-lg bg-[#1a1a1a] border border-white/10 text-gray-400 peer-checked:border-red-500 peer-checked:text-white peer-checked:bg-red-500/10 text-sm font-medium">
+                            128kbps
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="quality" value="192" class="peer sr-only">
+                        <div class="px-4 py-2 rounded-lg bg-[#1a1a1a] border border-white/10 text-gray-400 peer-checked:border-red-500 peer-checked:text-white peer-checked:bg-red-500/10 text-sm font-medium">
+                            192kbps
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="quality" value="320" class="peer sr-only" checked>
+                        <div class="px-4 py-2 rounded-lg bg-[#1a1a1a] border border-white/10 text-gray-400 peer-checked:border-red-500 peer-checked:text-white peer-checked:bg-red-500/10 text-sm font-medium">
+                            320kbps
+                        </div>
+                    </label>
+                </div>
+
+                <button onclick="startConversion()" id="convert-btn" class="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2 text-lg">
+                    <span>Convert Now</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+                
+                <p id="error-msg" class="text-red-500 text-sm mt-3 hidden text-center"></p>
+            </div>
+
+            <!-- Loading Stage -->
+            <div id="loading-stage" class="hidden py-8 text-center">
+                <div class="loader mx-auto mb-4"></div>
+                <h3 class="text-xl font-semibold mb-2">Converting...</h3>
+                <p class="text-gray-500 text-sm" id="loading-text">Fetching video info</p>
+                <div class="w-full bg-gray-800 rounded-full h-2 mt-4 max-w-sm mx-auto">
+                    <div id="progress-bar" class="bg-red-500 h-2 rounded-full transition-all" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Result Stage -->
+            <div id="result-stage" class="hidden">
+                <div class="flex flex-col items-center text-center">
+                    <img id="result-thumb" src="" class="w-full max-w-xs h-48 object-cover rounded-lg mb-4 bg-black">
+                    <h3 id="result-title" class="text-lg font-semibold mb-2 px-4">Title</h3>
+                    <p class="text-sm text-gray-400 mb-4"><span id="result-quality" class="bg-white/10 px-2 py-1 rounded">320kbps</span> • <span id="result-size">5 MB</span></p>
+                    
+                    <button onclick="downloadFile()" class="w-full max-w-sm bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 mb-3">
+                        <i class="fa-solid fa-download"></i> Download MP3
+                    </button>
+                    <button onclick="reset()" class="text-gray-500 hover:text-white text-sm underline">Convert another</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Features -->
+        <div class="grid grid-cols-3 gap-4 mt-12 text-center">
+            <div class="p-4">
+                <i class="fa-solid fa-bolt text-red-500 text-2xl mb-2"></i>
+                <p class="text-sm text-gray-400">Fast</p>
+            </div>
+            <div class="p-4">
+                <i class="fa-solid fa-infinity text-red-500 text-2xl mb-2"></i>
+                <p class="text-sm text-gray-400">Unlimited</p>
+            </div>
+            <div class="p-4">
+                <i class="fa-solid fa-lock text-red-500 text-2xl mb-2"></i>
+                <p class="text-sm text-gray-400">Secure</p>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        let downloadUrl = '';
+        
+        async function startConversion() {
+            const url = document.getElementById('video-url').value.trim();
+            const quality = document.querySelector('input[name="quality"]:checked').value;
+            const errorEl = document.getElementById('error-msg');
+            
+            if (!url || (!url.includes('youtube.com') && !url.includes('youtu.be'))) {
+                errorEl.textContent = 'Please enter a valid YouTube URL';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+            
+            errorEl.classList.add('hidden');
+            document.getElementById('input-stage').classList.add('hidden');
+            document.getElementById('loading-stage').classList.remove('hidden');
+            
+            try {
+                updateProgress(20, 'Getting video info...');
+                const infoRes = await fetch('/api/info', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+                
+                if (!infoRes.ok) throw new Error('Failed to get video info');
+                const info = await infoRes.json();
+                
+                updateProgress(50, 'Converting to MP3...');
+                const convertRes = await fetch('/api/convert', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url, quality })
+                });
+                
+                if (!convertRes.ok) {
+                    const err = await convertRes.json();
+                    throw new Error(err.error || 'Conversion failed');
+                }
+                
+                const result = await convertRes.json();
+                updateProgress(100, 'Done!');
+                
+                setTimeout(() => showResult(info, result, quality), 500);
+                
+            } catch (error) {
+                document.getElementById('loading-stage').classList.add('hidden');
+                document.getElementById('input-stage').classList.remove('hidden');
+                errorEl.textContent = error.message;
+                errorEl.classList.remove('hidden');
+            }
+        }
+        
+        function updateProgress(percent, text) {
+            document.getElementById('progress-bar').style.width = percent + '%';
+            document.getElementById('loading-text').textContent = text;
+        }
+        
+        function showResult(info, result, quality) {
+            document.getElementById('loading-stage').classList.add('hidden');
+            document.getElementById('result-stage').classList.remove('hidden');
+            document.getElementById('result-thumb').src = info.thumbnail;
+            document.getElementById('result-title').textContent = info.title;
+            document.getElementById('result-quality').textContent = quality + 'kbps';
+            document.getElementById('result-size').textContent = result.fileSize;
+            downloadUrl = result.downloadUrl;
+        }
+        
+        function downloadFile() {
+            if (!downloadUrl) return;
+            window.location.href = downloadUrl;
+        }
+        
+        function reset() {
+            document.getElementById('result-stage').classList.add('hidden');
+            document.getElementById('input-stage').classList.remove('hidden');
+            document.getElementById('video-url').value = '';
+            downloadUrl = '';
+        }
+        
+        document.getElementById('video-url').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') startConversion();
+        });
+    </script>
+</body>
+</html>
